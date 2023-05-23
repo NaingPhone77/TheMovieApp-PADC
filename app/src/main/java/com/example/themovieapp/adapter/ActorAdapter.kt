@@ -8,7 +8,7 @@ import com.example.themovieapp.R
 import com.example.themovieapp.data.vos.ActorVO
 import com.example.themovieapp.viewholders.ActorViewHolder
 
-class ActorAdapter: RecyclerView.Adapter<ActorViewHolder>() {
+class ActorAdapter: RecyclerView.Adapter<ActorViewHolder>()  {
 
     private var mActors : List<ActorVO> = listOf()
 
@@ -24,13 +24,10 @@ class ActorAdapter: RecyclerView.Adapter<ActorViewHolder>() {
     }
 
     override fun getItemCount(): Int {
-        return if(mActors.count() > 5){
-            7
-        }else{
-            mActors.count()
-        }
+        return mActors.count()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun setNewData(actors : List<ActorVO>){
         mActors = actors
         notifyDataSetChanged()

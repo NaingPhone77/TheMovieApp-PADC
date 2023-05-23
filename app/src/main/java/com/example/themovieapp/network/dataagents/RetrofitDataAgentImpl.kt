@@ -221,17 +221,17 @@ object RetrofitDataAgentImpl : MovieDataAgent {
         onFailure: (String) -> Unit
     ) {
         mTheMovieApi?.getCreditsByMovie(movieId = movieId)?.enqueue(
-            object : Callback<GetCreditsByMovieResponse>{
+            object : Callback<GetCreditsByMovieResponse> {
                 override fun onResponse(
                     call: Call<GetCreditsByMovieResponse>,
                     response: Response<GetCreditsByMovieResponse>
                 ) {
-                    if(response.isSuccessful){
-                        response.body()?. let {
+                    if (response.isSuccessful){
+                        response.body()?.let {
                             onSuccess(Pair(it.cast ?: listOf(), it.crew ?: listOf()))
                         }
                     }
-                    else {
+                    else{
                         onFailure(response.message())
                     }
                 }

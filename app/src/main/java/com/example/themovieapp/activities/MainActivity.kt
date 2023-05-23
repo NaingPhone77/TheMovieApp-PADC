@@ -55,9 +55,9 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         setUpToolBar()
         setUpBannerViewPaper()
 //        setUpGenreTabLayout()
+        setUpListeners()
         setUpShowcaseRecyclerView()
         setUpViewPods()
-        setUpListeners()
         requestData()
 
 //        MovieDataAgentImpl.getNowPlayingMovies()
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
                 mBannerAdapter.setNewData(it)
             },
             onFailure = {
-                Toast.makeText(this, "Now Playing Section isn't succeed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Now Playing Section Failed", Toast.LENGTH_SHORT).show()
             }
         )
 
@@ -90,10 +90,12 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         //Top Rated Movie
         mMovieModel.getTopRatedMovies(
             onSuccess = {
+                Log.e("Successful",it.toString())
                 mShowcaseAdapter.setNewData(it)
             },
             onFailure = {
-                Toast.makeText(this, "Top rated Failed", Toast.LENGTH_SHORT).show()
+                Log.e("Error Message",it.toString())
+                Toast.makeText(this, "Top rated Failed $it", Toast.LENGTH_SHORT).show()
             }
         )
 

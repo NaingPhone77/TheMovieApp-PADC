@@ -15,7 +15,8 @@ class ActorListsViewPod @JvmOverloads constructor(
 ) : RelativeLayout(context, attrs) {
 
     private lateinit var binding : ViewPodActorListsBinding
-    private lateinit var mActorAdapter : ActorAdapter
+
+    private var mActorAdapter : ActorAdapter ? = null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
@@ -24,19 +25,20 @@ class ActorListsViewPod @JvmOverloads constructor(
 
     fun setUpActorListViewPod(){
         setUpActorRecyclerView()
-
     }
 
-    fun setData(actors : List<ActorVO>){
-        mActorAdapter.setNewData(actors)
-    }
-
+    // Detail
     //this fun must be Public because activity will call to use this Fun !!
     fun setUpActorViewPod(backgroundColorReference : Int, titleText : String , moreTitleText : String){
         setBackgroundColor(ContextCompat.getColor(context,backgroundColorReference))
         binding.tvBestActor.text = titleText
         binding.tvMoreActors.text = moreTitleText
         binding.tvMoreActors.paintFlags = Paint.UNDERLINE_TEXT_FLAG //underline
+        setUpActorRecyclerView()
+    }
+
+    fun setData(actorsList : List<ActorVO>){
+        mActorAdapter?.setNewData(actorsList)
     }
 
     private fun setUpActorRecyclerView(){

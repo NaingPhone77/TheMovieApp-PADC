@@ -45,7 +45,7 @@ interface MovieDataAgent {
 
     fun getCreditsByMovie(
         movieId : String,
-        onSuccess : (Pair<List<ActorVO>, List<ActorVO>>) -> Unit,         // want to send (2)lists to Data layer
+        onSuccess : (Pair<List<ActorVO>, List<ActorVO>>)    -> Unit,         // want to send (2)lists to Data layer
         onFailure: (String) -> Unit
     )
 }

@@ -10,6 +10,9 @@ data class MovieVO(
     val backDropPath : String?,
 
     @SerializedName("genre_ids")
+    val genreId : List<Int>?,
+
+    @SerializedName("genres")
     val genres : List<GenreVO>?,
 
     @SerializedName("id")
