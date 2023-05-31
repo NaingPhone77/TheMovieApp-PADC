@@ -1,5 +1,6 @@
 package com.example.themovieapp.persistence.daos
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -16,13 +17,16 @@ interface MovieDao {
     fun insertSingleMovie(movie : MovieVO?)                     // For Detail Screen
 
     @Query("SELECT * FROM movies")
-    fun getAllMovies() : List<MovieVO>                     // Movies List
+    fun getAllMovies() : LiveData<List<MovieVO>>              // Movies List
 
     @Query("SELECT * FROM movies WHERE id = :movieId")
-    fun getMovieById(movieId : Int) : MovieVO?                   // movie ID
+    fun getMovieById(movieId : Int) : LiveData<MovieVO?>                // movie ID
+
+    @Query("SELECT * FROM movies WHERE id = :movieId")
+    fun getMovieByIdOneTime(movieId : Int) : MovieVO?
 
     @Query("SELECT * FROM movies WHERE type = :type")
-    fun getMoviesByType(type : String) : List<MovieVO>           // type
+    fun getMoviesByType(type : String) : LiveData<List<MovieVO>>          // type
 
     @Query("DELETE FROM movies")
     fun deleteAllMovies()

@@ -1,12 +1,16 @@
 package com.example.themovieapp.activities
 
-import androidx.appcompat.app.AppCompatActivity
+//import com.example.themovieapp.network.dataagents.MovieDataAgent
+//import com.example.themovieapp.network.dataagents.MovieDataAgentImpl
+//import com.example.themovieapp.network.dataagents.OkHttpDataAgentImpl
+//import com.example.themovieapp.network.dataagents.RetrofitDataAgentImpl
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.themovieapp.R
 import com.example.themovieapp.adapter.BannerAdapter
@@ -18,11 +22,6 @@ import com.example.themovieapp.databinding.ActivityMainBinding
 import com.example.themovieapp.delegates.BannerViewHolderDelegate
 import com.example.themovieapp.delegates.MovieViewHolderDelegate
 import com.example.themovieapp.delegates.ShowcaseViewHolderDelegate
-import com.example.themovieapp.dummy.dummyGenreList
-import com.example.themovieapp.network.dataagents.MovieDataAgent
-import com.example.themovieapp.network.dataagents.MovieDataAgentImpl
-//import com.example.themovieapp.network.dataagents.OkHttpDataAgentImpl
-import com.example.themovieapp.network.dataagents.RetrofitDataAgentImpl
 import com.example.themovieapp.viewpods.ActorListsViewPod
 import com.example.themovieapp.viewpods.MovieListViewPod
 import com.google.android.material.snackbar.Snackbar
@@ -60,44 +59,34 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         setUpViewPods()
         requestData()
 
-//        MovieDataAgentImpl.getNowPlayingMovies()
-//        OkHttpDataAgentImpl.getNowPlayingMovies()
-//        RetrofitDataAgentImpl.getNowPlayingMovies()
+
     }
 
     private fun requestData(){
 
         //Now Playing Movie
-        mMovieModel.getNowPlayingMovies(
-            onSuccess = {
-                mBannerAdapter.setNewData(it)
-            },
-            onFailure = {
-                Toast.makeText(this, "Now Playing Section Failed", Toast.LENGTH_SHORT).show()
-            }
-        )
+        mMovieModel.getNowPlayingMovies{
+            showErrorMessage()
+        }?.observe(this) {
+            mBannerAdapter.setNewData(it)
+        }
+
 
         //Popular Movie
-        mMovieModel.getPopularMovies(
-            onSuccess = {
-                mBestPopularMovieListViewPod.setData(it)
-            },
-            onFailure = {
-                Toast.makeText(this, "Popular Section Failed", Toast.LENGTH_SHORT).show()
-            }
-        )
+        mMovieModel.getPopularMovies {
+            showErrorMessage()
+        }?.observe(this) {
+            mBestPopularMovieListViewPod.setData(it)
+        }
+
 
         //Top Rated Movie
-        mMovieModel.getTopRatedMovies(
-            onSuccess = {
-                Log.e("Successful",it.toString())
-                mShowcaseAdapter.setNewData(it)
-            },
-            onFailure = {
-                Log.e("Error Message",it.toString())
-                Toast.makeText(this, "Top rated Failed $it", Toast.LENGTH_SHORT).show()
-            }
-        )
+        mMovieModel.getTopRatedMovies {
+            showErrorMessage()
+        }?.observe(this) {
+            mShowcaseAdapter.setNewData(it)
+        }
+
 
         // Get Genres
         mMovieModel.getGenres(
@@ -115,6 +104,7 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
             }
         )
 
+
         // Actors
         mMovieModel.getActors(
             onSuccess = {
@@ -125,6 +115,7 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
             }
         )
     }
+
 
     // to get Genre Movie ID
     private fun getMoviesByGenre(genreId : Int){
@@ -139,6 +130,7 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         )
     }
 
+
     //setup instance of composite custom view(View Pod) to use in activity
     private fun setUpViewPods(){
         mBestPopularMovieListViewPod = binding.vpBestPopularMovieList.root
@@ -150,6 +142,7 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         mActorListViewPod = binding.vpBestActors.root
         mActorListViewPod.setUpActorListViewPod()
     }
+
 
     private fun setUpListeners() {
 
@@ -202,6 +195,7 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         }
     }
 
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_discover,menu)
         return true
@@ -222,6 +216,24 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         Snackbar.make(window.decorView, "Tapped Movie From Movie", Snackbar.LENGTH_LONG).show()
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        if(item.itemId == R.id.btnSearch) {
+            startActivity(MovieSearchActivity.newIntent(this))
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+
+//        val id = item.itemId
+//        if (id == R.id.menuSearch) {
+//            Toast.makeText(this,"clicked",Toast.LENGTH_LONG).show()
+//            startActivity( MovieSearchActivity.newIntent(this))
+//
+//            return true
+//        }
+//        return super.onOptionsItemSelected(item)
+    }
+
 
     private fun setUpTextListener(){
         binding.tvCheckMovieShowTimeLabel.addTextChangedListener( object : TextWatcher {
@@ -240,7 +252,7 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         })
     }
 
-//        private fun showErrorMessage() {
-//            Toast.makeText(this,"Network Failed",Toast.LENGTH_LONG).show()
-//    }
+        private fun showErrorMessage() {
+            Toast.makeText(this,"Network Failed",Toast.LENGTH_LONG).show()
+    }
 }

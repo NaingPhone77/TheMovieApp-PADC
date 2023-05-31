@@ -25,4 +25,7 @@
     <string name="lbl_premiere">Premiere:</string>
     <string name="lbl_description">Description:</string>
     <string name="lbl_about_film">ABOUT FILM</string>
+    <string name="lbl_hint_search_movie">Please Enter Movie Name</string>
+    <string name="lbl_tv_movie_name">Fantastic Beasts And Where To Find Them</string>
+    <string name="lbl_movie_votes">388876 VOTES</string>
 </resources>

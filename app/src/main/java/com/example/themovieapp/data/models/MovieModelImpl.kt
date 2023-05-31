@@ -1,82 +1,84 @@
 package com.example.themovieapp.data.models
 
-import android.content.Context
+import androidx.lifecycle.LiveData
 import com.example.themovieapp.data.vos.*
-import com.example.themovieapp.network.dataagents.MovieDataAgent
-import com.example.themovieapp.network.dataagents.RetrofitDataAgentImpl
-import com.example.themovieapp.persistence.MovieDatabase
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.schedulers.Schedulers
 
-object MovieModelImpl : MovieModel {
-
-    //Data Pass from Network layer to Data Layer
-    private val mMovieDataAgent : MovieDataAgent = RetrofitDataAgentImpl   // Data Agent is Interface type. So call MovieDataAgent
-
-    //Room Database
-    private var mMovieDatabase : MovieDatabase ?= null
-
-    fun initDatabase(context: Context){
-        mMovieDatabase = MovieDatabase.getDBInstance(context)
-    }
+object MovieModelImpl : MovieModel, BaseModel() {
 
     override fun getNowPlayingMovies(
-        onSuccess: (List<MovieVO>) -> Unit,
         onFailure: (String) -> Unit
-    ) {
-        //Database (Show Persistence layer's Data in ViewLayer)
-        onSuccess(mMovieDatabase?.movieDao()?.getMoviesByType(type = NOW_PLAYING) ?: listOf())
+    ): LiveData<List<MovieVO>>? {
 
         //Network
-        mMovieDataAgent.getNowPlayingMovies(onSuccess = {
+        mMovieApi.getNowPlayingMovies(page = 1)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                it.results?.forEach { movie -> movie.type = NOW_PLAYING }
+                mMovieDatabase?.movieDao()?.insertMovies(it.results ?: listOf())
 
-            it.forEach { movie -> movie.type = NOW_PLAYING }     // put data to persistence layer
-            mMovieDatabase?.movieDao()?.insertMovies(it)         // put data to persistence layer
+            }, {
+                onFailure(it.localizedMessage ?: "")
+            })
 
-            onSuccess(it)                                      // send data to View Layer from Network layer
-        }, onFailure = onFailure)
+        return mMovieDatabase?.movieDao()?.getMoviesByType(type = NOW_PLAYING)
 
-
-        //Data Layer and Network layer code
-//        mMovieDataAgent.getNowPlayingMovies(onSuccess = onSuccess, onFailure = onFailure)     // req Data from Network Layer
     }
 
     override fun getPopularMovies(
-        onSuccess: (List<MovieVO>) -> Unit,
         onFailure: (String) -> Unit
-    ) {
-        onSuccess(mMovieDatabase?.movieDao()?.getMoviesByType(type = POPULAR) ?: listOf())
+    ): LiveData<List<MovieVO>>? {
 
-        mMovieDataAgent.getPopularMovies(onSuccess ={
+        mMovieApi.getPopularMovies(page = 1)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                it.results?.forEach { movie -> movie.type = POPULAR }
+                mMovieDatabase?.movieDao()?.insertMovies(it.results ?: listOf())
 
-            it.forEach { movie -> movie.type = POPULAR }
-            mMovieDatabase?.movieDao()?.insertMovies(it)
+            }, {
+                onFailure(it.localizedMessage ?: "")
+            })
 
-            onSuccess(it)
-        }, onFailure = onFailure)
+        return mMovieDatabase?.movieDao()?.getMoviesByType(type = POPULAR)
 
-//        mMovieDataAgent.getPopularMovies(onSuccess = onSuccess, onFailure = onFailure)
     }
 
     override fun getTopRatedMovies(
-        onSuccess: (List<MovieVO>) -> Unit,
         onFailure: (String) -> Unit
-    ) {
-        onSuccess(mMovieDatabase?.movieDao()?.getMoviesByType(type = TOP_RATED) ?: listOf())
+    ): LiveData<List<MovieVO>>? {
 
-        mMovieDataAgent.getTopRatedMovies(onSuccess = {
+        mMovieApi.getTopRatedMovies(page = 1)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                it.results?.forEach { movie -> movie.type = TOP_RATED }
+                mMovieDatabase?.movieDao()?.insertMovies(it.results ?: listOf())
 
-            it.forEach { movie -> movie.type = TOP_RATED }
-            mMovieDatabase?.movieDao()?.insertMovies(it)
+            }, {
+                onFailure(it.localizedMessage ?: "")
+            })
 
-            onSuccess(it)
-        }, onFailure= onFailure)
-//        mMovieDataAgent.getTopRatedMovies(onSuccess = onSuccess, onFailure = onFailure)
+        return mMovieDatabase?.movieDao()?.getMoviesByType(type = TOP_RATED)
+
     }
 
     override fun getGenres(
         onSuccess: (List<GenreVO>) -> Unit,
         onFailure: (String) -> Unit
     ) {
-        mMovieDataAgent.getGenres(onSuccess = onSuccess, onFailure = onFailure)
+
+        mMovieApi.getGenres()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                onSuccess(it.genres ?: listOf())
+            }, {
+                onFailure(it.localizedMessage ?: "")
+            })
     }
 
     override fun getMoviesByGenre(
@@ -84,42 +86,50 @@ object MovieModelImpl : MovieModel {
         onSuccess: (List<MovieVO>) -> Unit,
         onFailure: (String) -> Unit
     ) {
-        mMovieDataAgent.getMoviesByGenre(genreId = genreId, onSuccess = onSuccess, onFailure = onFailure)
+        mMovieApi.getMoviesByGenre(genreId = genreId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                onSuccess(it.results ?: listOf())
+            }, {
+                onFailure(it.localizedMessage ?: "")
+            })
     }
 
     override fun getActors(
         onSuccess: (List<ActorVO>) -> Unit,
         onFailure: (String) -> Unit
     ) {
-        mMovieDataAgent.getActors(onSuccess = onSuccess, onFailure = onFailure)
+        mMovieApi.getActors()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                onSuccess(it.results ?: listOf())
+            }, {
+                onFailure(it.localizedMessage ?: "")
+            })
     }
+
 
     override fun getMovieDetails(
         movieId: String,
-        onSuccess: (MovieVO) -> Unit,
         onFailure: (String) -> Unit
-    ) {
-        //Database   (Show Persistence layer's Data in ViewLayer)
-        val movieFromDatabase = mMovieDatabase?.movieDao()?.getMovieById(movieId = movieId.toInt())
-        movieFromDatabase?.let {
-            onSuccess(it)
-        }
+    ): LiveData<MovieVO?>? {
 
-        // Network
-        mMovieDataAgent.getMovieDetails(
-            movieId = movieId,
-            onSuccess = {
+        mMovieApi.getMovieDetails(movieId = movieId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                val mMovieDatabaseToSync =
+                    mMovieDatabase?.movieDao()?.getMovieByIdOneTime(movieId = movieId.toInt())
+                it.type = mMovieDatabaseToSync?.type
+                mMovieDatabase?.movieDao()?.insertSingleMovie(it)
 
-                val movieFromDatabase = mMovieDatabase?.movieDao()?.getMovieById(movieId = movieId.toInt())    // At first, take a movie from Persistence layer
-                it.type = movieFromDatabase?.type             //  put a movie's type that from the persistence layer into the type of Network call  <- ( type that get from network call)
-                mMovieDatabase?.movieDao()?.insertSingleMovie(it)      // put data to persistence layer
+            }, {
+                onFailure(it.localizedMessage ?: "")
+            })
 
-                onSuccess(it)       //show in view layer
-            },
-            onFailure = onFailure
-        )
-
-//        mMovieDataAgent.getMovieDetails(movieId = movieId , onSuccess = onSuccess, onFailure = onFailure)
+        return mMovieDatabase?.movieDao()?.getMovieById(movieId = movieId.toInt())
     }
 
     override fun getCreditsByMovie(
@@ -127,6 +137,26 @@ object MovieModelImpl : MovieModel {
         onSuccess: (Pair<List<ActorVO>, List<ActorVO>>) -> Unit,
         onFailure: (String) -> Unit
     ) {
-        mMovieDataAgent.getCreditsByMovie(movieId = movieId, onSuccess = onSuccess, onFailure = onFailure)
+        mMovieApi.getCreditsByMovie(movieId = movieId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                onSuccess(Pair(it.cast ?: listOf(), it.crew ?: listOf()))
+            }, {
+                onFailure(it.localizedMessage ?: "")
+            })
+
+    }
+
+    override fun searchMovie(query: String): Observable<List<MovieVO>> {
+        return mMovieApi
+            .searchMovie(query = query)
+            .map {
+                it.results ?: listOf()
+            }
+            .onErrorResumeNext {
+                Observable.just(listOf())
+            }
+            .subscribeOn(Schedulers.io())
     }
 }
