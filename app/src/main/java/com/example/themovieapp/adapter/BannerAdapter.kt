@@ -25,7 +25,7 @@ class BannerAdapter(private val mDelegate: BannerViewHolderDelegate) : RecyclerV
 
     override fun getItemCount(): Int {
         return if (mMovieList.count() > 5){
-            5
+            10
         }else{
             mMovieList.count()
         }

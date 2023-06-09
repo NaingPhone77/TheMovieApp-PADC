@@ -25,7 +25,7 @@ class MovieAdapter(private val mDelegate : MovieViewHolderDelegate) : RecyclerVi
 
     override fun getItemCount(): Int {
         return if (mMovieList.count() > 5){
-            5
+            10
         }else{
             mMovieList.count()
         }

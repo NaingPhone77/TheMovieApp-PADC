@@ -11,33 +11,37 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.themovieapp.R
 import com.example.themovieapp.adapter.BannerAdapter
 import com.example.themovieapp.adapter.ShowcaseAdapter
 import com.example.themovieapp.data.models.MovieModel
 import com.example.themovieapp.data.models.MovieModelImpl
+import com.example.themovieapp.data.vos.ActorVO
 import com.example.themovieapp.data.vos.GenreVO
+import com.example.themovieapp.data.vos.MovieVO
 import com.example.themovieapp.databinding.ActivityMainBinding
-import com.example.themovieapp.delegates.BannerViewHolderDelegate
-import com.example.themovieapp.delegates.MovieViewHolderDelegate
-import com.example.themovieapp.delegates.ShowcaseViewHolderDelegate
+import com.example.themovieapp.mvp.presenters.MainPresenter
+import com.example.themovieapp.mvp.presenters.MainPresenterImpl
+import com.example.themovieapp.mvp.views.MainView
 import com.example.themovieapp.viewpods.ActorListsViewPod
 import com.example.themovieapp.viewpods.MovieListViewPod
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 
-class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseViewHolderDelegate, MovieViewHolderDelegate {
+class MainActivity : AppCompatActivity(), MainView{
 
     private lateinit var binding : ActivityMainBinding
 
-    //Global Variables
-    private lateinit var mBannerAdapter : BannerAdapter
+    //Global Variables (VIEW PODS)
+    lateinit var mBannerAdapter : BannerAdapter
     lateinit var mShowcaseAdapter: ShowcaseAdapter
 
-    private lateinit var mBestPopularMovieListViewPod : MovieListViewPod
+    lateinit var mBestPopularMovieListViewPod : MovieListViewPod
     lateinit var mMoviesByGenreViewPod : MovieListViewPod
     lateinit var mActorListViewPod : ActorListsViewPod
+
 
     //model
     private val mMovieModel : MovieModel = MovieModelImpl
@@ -45,11 +49,15 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
     //data    (to save Genres)
     private var mGenres : List<GenreVO>? = null
 
+    // Presenter
+    private lateinit var mPresenter : MainPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        setUpPresenter()
 
         setUpToolBar()
         setUpBannerViewPaper()
@@ -59,7 +67,12 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         setUpViewPods()
         requestData()
 
+        mPresenter.onUiReady(this)
+    }
 
+    private fun setUpPresenter() {
+        mPresenter = ViewModelProvider(this)[MainPresenterImpl::class.java]
+        mPresenter.initView(this)
     }
 
     private fun requestData(){
@@ -134,10 +147,10 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
     //setup instance of composite custom view(View Pod) to use in activity
     private fun setUpViewPods(){
         mBestPopularMovieListViewPod = binding.vpBestPopularMovieList.root
-        mBestPopularMovieListViewPod.setUpMovieListViewPod(this)
+        mBestPopularMovieListViewPod.setUpMovieListViewPod(mPresenter)
 
         mMoviesByGenreViewPod = binding.vpMoviesByGenre.root
-        mMoviesByGenreViewPod.setUpMovieListViewPod(this)
+        mMoviesByGenreViewPod.setUpMovieListViewPod(mPresenter)
 
         mActorListViewPod = binding.vpBestActors.root
         mActorListViewPod.setUpActorListViewPod()
@@ -150,9 +163,7 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         //TabLayout.OnTabSelectedListener is listener. So we should use "object"
         binding.tabLayoutGenre.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener{
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                mGenres?.get(tab?.position ?: 0)?.id?.let {
-                    getMoviesByGenre(it)
-                }
+                mPresenter.onTapGenre(tab?.position ?: 0)
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {
@@ -166,13 +177,13 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
     }
 
     private fun setUpShowcaseRecyclerView(){
-        mShowcaseAdapter = ShowcaseAdapter(this)
+        mShowcaseAdapter = ShowcaseAdapter(mPresenter)
         binding.rvShowcases.adapter = mShowcaseAdapter
         binding.rvShowcases.layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.HORIZONTAL,false)
     }
 
     private fun setUpBannerViewPaper() {
-        mBannerAdapter = BannerAdapter(this)
+        mBannerAdapter = BannerAdapter(mPresenter)
         binding.viewPagerBanner.adapter = mBannerAdapter
 
         //attach dots indicator with view pager
@@ -201,20 +212,20 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
         return true
     }
 
-    override fun onTapMovieFromBanner(movieId : Int) {
-        startActivity(MovieDetailsActivity.newIntent(this,movieId))
-        Snackbar.make(window.decorView, "Tapped Movie From Banner", Snackbar.LENGTH_LONG).show()
-    }
-
-    override fun onTapMovieFromShowcase(movieId: Int) {
-        startActivity(MovieDetailsActivity.newIntent(this, movieId))
-        Snackbar.make(window.decorView, "Tapped Movie From Showcase", Snackbar.LENGTH_LONG).show()
-    }
-
-    override fun onTapMovie(movieId: Int) {
-        startActivity(MovieDetailsActivity.newIntent(this, movieId))
-        Snackbar.make(window.decorView, "Tapped Movie From Movie", Snackbar.LENGTH_LONG).show()
-    }
+//    override fun onTapMovieFromBanner(movieId : Int) {
+//        startActivity(MovieDetailsActivity.newIntent(this,movieId))
+//        Snackbar.make(window.decorView, "Tapped Movie From Banner", Snackbar.LENGTH_LONG).show()
+//    }
+//
+//    override fun onTapMovieFromShowcase(movieId: Int) {
+//        startActivity(MovieDetailsActivity.newIntent(this, movieId))
+//        Snackbar.make(window.decorView, "Tapped Movie From Showcase", Snackbar.LENGTH_LONG).show()
+//    }
+//
+//    override fun onTapMovie(movieId: Int) {
+//        startActivity(MovieDetailsActivity.newIntent(this, movieId))
+//        Snackbar.make(window.decorView, "Tapped Movie From Movie", Snackbar.LENGTH_LONG).show()
+//    }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
@@ -254,5 +265,37 @@ class MainActivity : AppCompatActivity(), BannerViewHolderDelegate, ShowcaseView
 
         private fun showErrorMessage() {
             Toast.makeText(this,"Network Failed",Toast.LENGTH_LONG).show()
+    }
+
+    override fun showNowPlayingMovies(nowPlayingMovies: List<MovieVO>) {
+        mBannerAdapter.setNewData(nowPlayingMovies)
+    }
+
+    override fun showPopularMovies(popularMovies: List<MovieVO>) {
+        mBestPopularMovieListViewPod.setData(popularMovies)
+    }
+
+    override fun showTopRatedMovies(topRatedMovies: List<MovieVO>) {
+        mShowcaseAdapter.setNewData(topRatedMovies)
+    }
+
+    override fun showGenres(genreList: List<GenreVO>) {
+        setUpGenreTabLayout(genreList)
+    }
+
+    override fun showMoviesByGenre(moviesByGenre: List<MovieVO>) {
+        mMoviesByGenreViewPod.setData(moviesByGenre)
+    }
+
+    override fun showActors(actors: List<ActorVO>) {
+        mActorListViewPod.setData(actors)
+    }
+
+    override fun navigateToMovieDetailScreen(movieId: Int) {
+        startActivity(MovieDetailsActivity.newIntent(this,movieId))
+    }
+
+    override fun showError(errorString: String) {
+        Snackbar.make(window.decorView, "Movie Network Error", Snackbar.LENGTH_LONG).show()
     }
 }
