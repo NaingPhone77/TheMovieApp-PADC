@@ -2,14 +2,14 @@ package com.example.themovieapp.mvp.presenters
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
-import com.example.themovieapp.data.models.MovieModel
-import com.example.themovieapp.data.models.MovieModelImpl
+import com.example.themovieapp.interactors.MovieInteractor
+import com.example.themovieapp.interactors.MovieInteractorImpl
 import com.example.themovieapp.mvp.views.MovieDetailView
 
 class MovieDetailsPresenterImpl : ViewModel(), MovieDetailsPresenter {
 
-    // Model
-    private val mMovieModel: MovieModel = MovieModelImpl
+    // Interactor
+    private val mMovieInteractor : MovieInteractor = MovieInteractorImpl
 
     // View
     private var mView: MovieDetailView? = null
@@ -22,7 +22,7 @@ class MovieDetailsPresenterImpl : ViewModel(), MovieDetailsPresenter {
     override fun onUiReadyInMovieDetails(owner: LifecycleOwner, movieId: Int) {
 
         // Movie Details
-        mMovieModel.getMovieDetails(movieId.toString()) {
+        mMovieInteractor.getMovieDetails(movieId.toString()) {
             mView?.showError(it)
         }?.observe(owner) {
             it?.let {
@@ -31,7 +31,7 @@ class MovieDetailsPresenterImpl : ViewModel(), MovieDetailsPresenter {
         }
 
         // Get Credit Movies
-        mMovieModel.getCreditsByMovie(
+        mMovieInteractor.getCreditsByMovie(
             movieId.toString(),
             onSuccess = {
                 mView?.showCreditsByMovie(cast = it.first, crew = it.second)

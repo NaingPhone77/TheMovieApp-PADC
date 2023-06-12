@@ -4,19 +4,30 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.view.WindowManager
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.example.themovieapp.R
+import com.example.themovieapp.data.vos.ActorVO
 import com.example.themovieapp.data.vos.GenreVO
 import com.example.themovieapp.data.vos.MovieVO
 import com.example.themovieapp.databinding.ActivityMovieDetailsBinding
-import com.example.themovieapp.mvvm.MovieDetailsViewModel
+import com.example.themovieapp.mvp.presenters.MovieDetailsPresenter
+import com.example.themovieapp.mvp.presenters.MovieDetailsPresenterImpl
+import com.example.themovieapp.mvp.views.MovieDetailView
 import com.example.themovieapp.utils.IMAGE_BASE_URL
 import com.example.themovieapp.viewpods.ActorListsViewPod
 
-class MovieDetailsActivity : AppCompatActivity(){
+class MovieDetailsActivity : BaseActivity(), MovieDetailView{
+
+    //Presenter
+    private lateinit var mPresenter : MovieDetailsPresenter
+
+    private lateinit var binding : ActivityMovieDetailsBinding
+
+    //view pod references (cast and crew)
+    private lateinit var mActorsListsViewPod : ActorListsViewPod
+    private lateinit var mCreatorsListsViewPod : ActorListsViewPod
 
     //create new instance
     companion object {
@@ -29,53 +40,27 @@ class MovieDetailsActivity : AppCompatActivity(){
         }
     }
 
-    private lateinit var binding : ActivityMovieDetailsBinding
-
-    //view pod references (cast and crew)
-    private lateinit var mActorsListsViewPod : ActorListsViewPod
-    private lateinit var mCreatorsListsViewPod : ActorListsViewPod
-
-    // ViewModel
-    private lateinit var mViewModel : MovieDetailsViewModel
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMovieDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        )
-
-        val movieId = intent?.getIntExtra(EXTRA_MOVIE_ID,0)
-        movieId?.let {
-            setUpViewModel(it)
-        }
+        setUpPresenter()
 
         setUpViewPods()
         setUpListeners()
 
-        // observe Live Data
-        observeLiveData()
-    }
-
-    private fun setUpViewModel(movieId : Int) {
-        mViewModel = ViewModelProvider(this) [MovieDetailsViewModel::class.java]
-        mViewModel.getInitialData(movieId)
-    }
-
-    private fun observeLiveData() {
-        mViewModel.movieDetailLiveData?.observe(this) {
-            it?.let {  movie->
-                bindData(movie)
-            }
+        val movieId = intent?.getIntExtra(EXTRA_MOVIE_ID,0)
+        movieId?.let {
+            mPresenter.onUiReadyInMovieDetails(this,movieId)
         }
 
-        mViewModel.castLiveData?.observe(this,mActorsListsViewPod::setData)
-        mViewModel.crewLiveData?.observe(this,mCreatorsListsViewPod::setData)
     }
 
+    private fun setUpPresenter(){
+        mPresenter = ViewModelProvider(this)[MovieDetailsPresenterImpl::class.java]
+        mPresenter.initView(this)
+    }
 
     private fun setUpListeners(){
         binding.btnBack.setOnClickListener{
@@ -141,5 +126,22 @@ class MovieDetailsActivity : AppCompatActivity(){
                 binding.tvThirdGenre.visibility = View.GONE
             }
         }
+    }
+
+    override fun showMovieDetails(movie: MovieVO) {
+        bindData(movie)
+    }
+
+    override fun showCreditsByMovie(cast: List<ActorVO>, crew: List<ActorVO>) {
+        mActorsListsViewPod.setData(cast)
+        mCreatorsListsViewPod.setData(crew)
+    }
+
+    override fun navigateBack() {
+        finish()
+    }
+
+    override fun showError(errorString: String) {
+        Toast.makeText(this, "Movie Detail Viber Network Error", Toast.LENGTH_SHORT).show()
     }
 }
