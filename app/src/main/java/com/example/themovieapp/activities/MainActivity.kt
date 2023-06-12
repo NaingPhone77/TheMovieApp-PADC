@@ -42,10 +42,6 @@ class MainActivity : AppCompatActivity(), MainView{
     lateinit var mMoviesByGenreViewPod : MovieListViewPod
     lateinit var mActorListViewPod : ActorListsViewPod
 
-
-    //model
-    private val mMovieModel : MovieModel = MovieModelImpl
-
     //data    (to save Genres)
     private var mGenres : List<GenreVO>? = null
 
@@ -65,7 +61,7 @@ class MainActivity : AppCompatActivity(), MainView{
         setUpListeners()
         setUpShowcaseRecyclerView()
         setUpViewPods()
-        requestData()
+//         requestData()
 
         mPresenter.onUiReady(this)
     }
@@ -75,73 +71,73 @@ class MainActivity : AppCompatActivity(), MainView{
         mPresenter.initView(this)
     }
 
-    private fun requestData(){
+//     private fun requestData(){
 
-        //Now Playing Movie
-        mMovieModel.getNowPlayingMovies{
-            showErrorMessage()
-        }?.observe(this) {
-            mBannerAdapter.setNewData(it)
-        }
-
-
-        //Popular Movie
-        mMovieModel.getPopularMovies {
-            showErrorMessage()
-        }?.observe(this) {
-            mBestPopularMovieListViewPod.setData(it)
-        }
+//         //Now Playing Movie
+//         mMovieModel.getNowPlayingMovies{
+//             showErrorMessage()
+//         }?.observe(this) {
+//             mBannerAdapter.setNewData(it)
+//         }
 
 
-        //Top Rated Movie
-        mMovieModel.getTopRatedMovies {
-            showErrorMessage()
-        }?.observe(this) {
-            mShowcaseAdapter.setNewData(it)
-        }
+//         //Popular Movie
+//         mMovieModel.getPopularMovies {
+//             showErrorMessage()
+//         }?.observe(this) {
+//             mBestPopularMovieListViewPod.setData(it)
+//         }
 
 
-        // Get Genres
-        mMovieModel.getGenres(
-            onSuccess = {
-                mGenres = it
-                setUpGenreTabLayout(it)
-
-                // Get Movies By Genre For First Genre
-                it.firstOrNull()?.id?.let { genreId ->
-                    getMoviesByGenre(genreId)
-                }
-            },
-            onFailure = {
-                Toast.makeText(this, "Genre Section Failed", Toast.LENGTH_SHORT).show()
-            }
-        )
+//         //Top Rated Movie
+//         mMovieModel.getTopRatedMovies {
+//             showErrorMessage()
+//         }?.observe(this) {
+//             mShowcaseAdapter.setNewData(it)
+//         }
 
 
-        // Actors
-        mMovieModel.getActors(
-            onSuccess = {
-                mActorListViewPod.setData(it)
-            },
-            onFailure = {
-                Toast.makeText(this, "Actors Section Failed", Toast.LENGTH_SHORT).show()
-            }
-        )
-    }
+//         // Get Genres
+//         mMovieModel.getGenres(
+//             onSuccess = {
+//                 mGenres = it
+//                 setUpGenreTabLayout(it)
+
+//                 // Get Movies By Genre For First Genre
+//                 it.firstOrNull()?.id?.let { genreId ->
+//                     getMoviesByGenre(genreId)
+//                 }
+//             },
+//             onFailure = {
+//                 Toast.makeText(this, "Genre Section Failed", Toast.LENGTH_SHORT).show()
+//             }
+//         )
 
 
-    // to get Genre Movie ID
-    private fun getMoviesByGenre(genreId : Int){
-        mMovieModel.getMoviesByGenre(
-            genreId = genreId.toString(),
-            onSuccess = {
-                mMoviesByGenreViewPod.setData(it)
-            },
-            onFailure = {
-                Toast.makeText(this, "Movie By Genre Failed", Toast.LENGTH_SHORT).show()
-            }
-        )
-    }
+//         // Actors
+//         mMovieModel.getActors(
+//             onSuccess = {
+//                 mActorListViewPod.setData(it)
+//             },
+//             onFailure = {
+//                 Toast.makeText(this, "Actors Section Failed", Toast.LENGTH_SHORT).show()
+//             }
+//         )
+//     }
+
+
+//     // to get Genre Movie ID
+//     private fun getMoviesByGenre(genreId : Int){
+//         mMovieModel.getMoviesByGenre(
+//             genreId = genreId.toString(),
+//             onSuccess = {
+//                 mMoviesByGenreViewPod.setData(it)
+//             },
+//             onFailure = {
+//                 Toast.makeText(this, "Movie By Genre Failed", Toast.LENGTH_SHORT).show()
+//             }
+//         )
+//     }
 
 
     //setup instance of composite custom view(View Pod) to use in activity
