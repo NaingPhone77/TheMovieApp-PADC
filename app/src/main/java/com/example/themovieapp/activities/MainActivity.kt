@@ -113,7 +113,6 @@ class MainActivity : AppCompatActivity(), MainView{
 //             }
 //         )
 
-
 //         // Actors
 //         mMovieModel.getActors(
 //             onSuccess = {
